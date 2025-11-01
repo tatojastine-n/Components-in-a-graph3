@@ -1,0 +1,111 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'componentsInGraph' function below.
+     *
+     * The function is expected to return an INTEGER_ARRAY.
+     * The function accepts 2D_INTEGER_ARRAY gb as parameter.
+     */
+
+    public static List<int> componentsInGraph(List<List<int>> gb)
+    {
+        // Find the maximum node number
+        int maxNode = gb.SelectMany(x => x).Max();
+
+        // Build adjacency list
+        List<int>[] graph = new List<int>[maxNode + 1];
+        for (int i = 0; i <= maxNode; i++)
+            graph[i] = new List<int>();
+
+        foreach (var edge in gb)
+        {
+            int u = edge[0];
+            int v = edge[1];
+            graph[u].Add(v);
+            graph[v].Add(u);
+        }
+        
+         bool[] visited = new bool[maxNode + 1];
+        List<int> componentSizes = new List<int>();
+
+        for (int i = 1; i <= maxNode; i++)
+        {
+            if (!visited[i] && graph[i].Count > 0)
+            {
+                int size = BFS(i, graph, visited);
+                if (size > 1)
+                    componentSizes.Add(size);
+            }
+        }
+
+        int min = componentSizes.Min();
+        int max = componentSizes.Max();
+
+        return new List<int> { min, max };
+    }
+    
+    private static int BFS(int start, List<int>[] graph, bool[] visited)
+    {
+        Queue<int> queue = new Queue<int>();
+        queue.Enqueue(start);
+        visited[start] = true;
+        int count = 0;
+
+        while (queue.Count > 0)
+        {
+            int node = queue.Dequeue();
+            count++;
+
+            foreach (var neighbor in graph[node])
+            {
+                if (!visited[neighbor])
+                {
+                    visited[neighbor] = true;
+                    queue.Enqueue(neighbor);
+                }
+            }
+        }
+
+        return count;
+    }
+
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        int n = Convert.ToInt32(Console.ReadLine().Trim());
+
+        List<List<int>> gb = new List<List<int>>();
+
+        for (int i = 0; i < n; i++)
+        {
+            gb.Add(Console.ReadLine().TrimEnd().Split(' ').ToList().Select(gbTemp => Convert.ToInt32(gbTemp)).ToList());
+        }
+
+        List<int> result = Result.componentsInGraph(gb);
+
+        textWriter.WriteLine(String.Join(" ", result));
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
